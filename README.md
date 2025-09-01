@@ -21,15 +21,15 @@ Blur or hide secrets while streaming, screen sharing, or live demoing. Value‑o
 
 ## Settings
 
-- `streamerMode.enabled`: Enable Streamer Mode.
-- `streamerMode.obfuscationStyle`: `blur` | `block` | `dots` (default: `blur`).
-- `streamerMode.extraPresets`: Enable built‑in provider presets (default: `true`).
-- `streamerMode.patterns`: Add your own patterns. Items support `{ name, regex, group? }`.
+- `streamPrivacy.enabled`: Enable Streamer Mode.
+- `streamPrivacy.obfuscationStyle`: `blur` | `block` | `dots` (default: `blur`).
+- `streamPrivacy.extraPresets`: Enable built‑in provider presets (default: `true`).
+- `streamPrivacy.patterns`: Add your own patterns. Items support `{ name, regex, group? }`.
   - If `group` (number or name) is provided, only that capture group is masked (useful for value‑only masking).
   - Inline regex flags like `(?i)`/`(?m)` are supported at the start of the pattern.
-- `streamerMode.dangerousFiles`: Glob patterns to warn on open (e.g., `**/.env*`).
-- `streamerMode.maskWindowTitle`: Hide workspace names in the window title.
-- `streamerMode.windowTitleMaskedValue`: Title format when masked (uses VS Code variables).
+- `streamPrivacy.dangerousFiles`: Glob patterns to warn on open (e.g., `**/.env*`).
+- `streamPrivacy.maskWindowTitle`: Hide workspace names in the window title.
+- `streamPrivacy.windowTitleMaskedValue`: Title format when masked (uses VS Code variables).
 
 ## Commands
 

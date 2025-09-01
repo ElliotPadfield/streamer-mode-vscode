@@ -1,7 +1,7 @@
 {
-  "name": "streamer-mode",
+  "name": "stream-privacy",
   "displayName": "Streamer Mode - Hide secrets while on stream",
-  "description": "Blur or hide secrets (.env, API keys, tokens) during streaming, screen sharing, or live demos — masks values only and supports Stripe, AWS, GitHub, Slack, JWTs, URIs, and more.",
+  "description": "Blur or hide secrets (.env, API keys, tokens) during streaming, screen sharing, or live demos — masks values only and supports common API keys/secrets, JWTs, URIs, and more.",
   "version": "0.0.1",
   "publisher": "elliotpadfield",
   "repository": {
@@ -41,9 +41,7 @@
     "live coding",
     "presentation",
     "demo",
-    "jwt",
-    "stripe",
-    "aws"
+    "jwt"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -52,35 +50,35 @@
   "contributes": {
     "commands": [
       {
-        "command": "streamerMode.toggle",
+        "command": "streamPrivacy.toggle",
         "title": "Streamer Mode: Toggle"
       },
       {
-        "command": "streamerMode.statusActions",
+        "command": "streamPrivacy.statusActions",
         "title": "Streamer Mode: Status Actions"
       },
       {
-        "command": "streamerMode.cycleStyle",
+        "command": "streamPrivacy.cycleStyle",
         "title": "Streamer Mode: Cycle Obfuscation Style"
       },
       {
-        "command": "streamerMode.copyRedacted",
+        "command": "streamPrivacy.copyRedacted",
         "title": "Streamer Mode: Copy Redacted"
       },
       {
-        "command": "streamerMode.openSensitiveFileAnyway",
+        "command": "streamPrivacy.openSensitiveFileAnyway",
         "title": "Streamer Mode: Open Sensitive File Anyway"
       }
     ],
     "configuration": {
       "title": "Streamer Mode",
       "properties": {
-        "streamerMode.enabled": {
+        "streamPrivacy.enabled": {
           "type": "boolean",
           "default": false,
           "description": "Enable Streamer Mode masking and protections."
         },
-        "streamerMode.obfuscationStyle": {
+        "streamPrivacy.obfuscationStyle": {
           "type": "string",
           "enum": [
             "dots",
@@ -90,12 +88,12 @@
           "default": "blur",
           "description": "How to render masked text in the editor."
         },
-        "streamerMode.patterns": {
+        "streamPrivacy.patterns": {
           "type": "array",
           "default": [],
-          "description": "Custom patterns to mask. Each item supports { name, regex, group? }. Built-in presets controlled by streamerMode.extraPresets."
+          "description": "Custom patterns to mask. Each item supports { name, regex, group? }. Built-in presets controlled by streamPrivacy.extraPresets."
         },
-        "streamerMode.dangerousFiles": {
+        "streamPrivacy.dangerousFiles": {
           "type": "array",
           "default": [
             "**/.env*",
@@ -106,17 +104,17 @@
           ],
           "description": "Glob patterns of files to guard while enabled."
         },
-        "streamerMode.maskWindowTitle": {
+        "streamPrivacy.maskWindowTitle": {
           "type": "boolean",
           "default": true,
           "description": "When enabled, simplify the window title to hide workspace names."
         },
-        "streamerMode.extraPresets": {
+        "streamPrivacy.extraPresets": {
           "type": "boolean",
           "default": true,
           "description": "Enable extra built-in secret detection presets (env/config values, provider tokens, URIs)."
         },
-        "streamerMode.windowTitleMaskedValue": {
+        "streamPrivacy.windowTitleMaskedValue": {
           "type": "string",
           "default": "${appName}",
           "description": "Title format used when masked (uses the same variables as VS Code window.title)."
@@ -125,14 +123,14 @@
     },
     "keybindings": [
       {
-        "command": "streamerMode.copyRedacted",
+        "command": "streamPrivacy.copyRedacted",
         "key": "cmd+c",
-        "when": "streamerModeActive && editorTextFocus && isMac"
+        "when": "streamPrivacyActive && editorTextFocus && isMac"
       },
       {
-        "command": "streamerMode.copyRedacted",
+        "command": "streamPrivacy.copyRedacted",
         "key": "ctrl+c",
-        "when": "streamerModeActive && editorTextFocus && !isMac"
+        "when": "streamPrivacyActive && editorTextFocus && !isMac"
       }
     ]
   },

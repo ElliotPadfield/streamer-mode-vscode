@@ -9,34 +9,34 @@ let statusItem: vscode.StatusBarItem | null = null;
 let suppressedSensitiveUris = new Set<string>();
 const tempReveals = new Map<string, { start: number; end: number; expires: number }[]>();
 
-const CTX_KEY = 'streamerModeActive';
-const MEMENTO_PREV_TITLE_KEY = 'streamerMode.prevWindowTitle';
+const CTX_KEY = 'streamPrivacyActive';
+const MEMENTO_PREV_TITLE_KEY = 'streamPrivacy.prevWindowTitle';
 
 export function activate(context: vscode.ExtensionContext) {
   const cfg = vscode.workspace.getConfiguration();
-  enabled = cfg.get<boolean>('streamerMode.enabled', false);
+  enabled = cfg.get<boolean>('streamPrivacy.enabled', false);
 
   // Commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('streamerMode.toggle', async () => {
+    vscode.commands.registerCommand('streamPrivacy.toggle', async () => {
       await toggle(context);
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('streamerMode.statusActions', async () => {
+    vscode.commands.registerCommand('streamPrivacy.statusActions', async () => {
       await showStatusActions(context);
     }),
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('streamerMode.cycleStyle', async () => {
+    vscode.commands.registerCommand('streamPrivacy.cycleStyle', async () => {
       await cycleStyle();
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('streamerMode.revealAtRange', async (uriStr?: string, sLine?: number, sChar?: number, eLine?: number, eChar?: number, ms?: number) => {
+    vscode.commands.registerCommand('streamPrivacy.revealAtRange', async (uriStr?: string, sLine?: number, sChar?: number, eLine?: number, eChar?: number, ms?: number) => {
       const uri = uriStr ? vscode.Uri.parse(uriStr) : vscode.window.activeTextEditor?.document.uri;
       if (!uri) return;
       const ed = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === uri.toString());
@@ -48,13 +48,13 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('streamerMode.copyRedacted', async () => {
+    vscode.commands.registerCommand('streamPrivacy.copyRedacted', async () => {
       await copyRedacted();
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('streamerMode.openSensitiveFileAnyway', async (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('streamPrivacy.openSensitiveFileAnyway', async (uri?: vscode.Uri) => {
       if (!uri && vscode.window.activeTextEditor) {
         uri = vscode.window.activeTextEditor.document.uri;
       }
@@ -67,7 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Status bar
   statusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10);
-  statusItem.command = 'streamerMode.statusActions';
+  statusItem.command = 'streamPrivacy.statusActions';
   context.subscriptions.push(statusItem);
   updateStatusItem();
 
@@ -106,7 +106,7 @@ export function deactivate() {
 
 async function toggle(context: vscode.ExtensionContext) {
   enabled = !enabled;
-  await vscode.workspace.getConfiguration().update('streamerMode.enabled', enabled, vscode.ConfigurationTarget.Global);
+  await vscode.workspace.getConfiguration().update('streamPrivacy.enabled', enabled, vscode.ConfigurationTarget.Global);
   setContext(enabled);
   updateStatusItem();
 
@@ -122,13 +122,12 @@ async function toggle(context: vscode.ExtensionContext) {
 
 function updateStatusItem() {
   if (!statusItem) return;
-  const style = vscode.workspace.getConfiguration().get<string>('streamerMode.obfuscationStyle', 'dots');
+  const style = vscode.workspace.getConfiguration().get<string>('streamPrivacy.obfuscationStyle', 'dots');
   statusItem.text = enabled ? '$(eye-closed) Streamer Mode' : '$(eye) Streamer Mode';
   const tooltip = new vscode.MarkdownString();
   tooltip.isTrusted = true;
   tooltip.appendMarkdown(enabled ? '**Streamer Mode: Enabled**\n\n' : '**Streamer Mode: Disabled**\n\n');
-  tooltip.appendMarkdown(`Style: \
-\`${style}\`  •  [Cycle](command:streamerMode.cycleStyle)\n\n`);
+  tooltip.appendMarkdown(`Style: \`${style}\`  •  [Cycle](command:streamPrivacy.cycleStyle)\n\n`);
   tooltip.appendMarkdown('Click for quick actions.');
   statusItem.tooltip = tooltip;
   statusItem.show();
@@ -140,7 +139,7 @@ function setContext(on: boolean) {
 
 function ensureDecorationType() {
   if (decorationType) return;
-  const style = vscode.workspace.getConfiguration().get<string>('streamerMode.obfuscationStyle', 'dots');
+  const style = vscode.workspace.getConfiguration().get<string>('streamPrivacy.obfuscationStyle', 'dots');
   const base: vscode.DecorationRenderOptions = {
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
     overviewRulerColor: new vscode.ThemeColor('editorCodeLens.foreground'),
@@ -182,7 +181,7 @@ function clearDecorations() {
 }
 
 function getPatterns(): Pattern[] {
-  const arr = vscode.workspace.getConfiguration().get<any[]>('streamerMode.patterns', []);
+  const arr = vscode.workspace.getConfiguration().get<any[]>('streamPrivacy.patterns', []);
   const out: Pattern[] = [];
   for (const p of arr) {
     if (p && typeof p.regex === 'string') {
@@ -192,7 +191,7 @@ function getPatterns(): Pattern[] {
     }
   }
   // Optionally add extra built-in presets
-  if (vscode.workspace.getConfiguration().get<boolean>('streamerMode.extraPresets', true)) {
+  if (vscode.workspace.getConfiguration().get<boolean>('streamPrivacy.extraPresets', true)) {
     out.push(...BUILTIN_PRESETS);
   }
   return out;
@@ -205,7 +204,7 @@ function refreshDecorations() {
   if (!editor || !decorationType) return;
   const text = editor.document.getText();
   const decorations: vscode.DecorationOptions[] = [];
-  const style = vscode.workspace.getConfiguration().get<string>('streamerMode.obfuscationStyle', 'dots');
+  const style = vscode.workspace.getConfiguration().get<string>('streamPrivacy.obfuscationStyle', 'dots');
   cleanupExpiredReveals(editor.document);
 
   for (const p of getPatterns()) {
@@ -226,9 +225,9 @@ function refreshDecorations() {
             : undefined;
         const hover = new vscode.MarkdownString();
         hover.isTrusted = true;
-        const openSettingsCmd = `command:workbench.action.openSettings?${encodeURIComponent(JSON.stringify('streamerMode.patterns'))}`;
+        const openSettingsCmd = `command:workbench.action.openSettings?${encodeURIComponent(JSON.stringify('streamPrivacy.patterns'))}`;
         const revealArgs = encodeURIComponent(JSON.stringify([editor.document.uri.toString(), start.line, start.character, end.line, end.character, 5000]));
-        hover.appendMarkdown(`Streamer Mode: hidden ${p.name}\n\n[Temporarily reveal (5s)](command:streamerMode.revealAtRange?${revealArgs}) · [Manage Patterns](${openSettingsCmd}) · [Cycle Style](command:streamerMode.cycleStyle)`);
+        hover.appendMarkdown(`Streamer Mode: hidden ${p.name}\n\n[Temporarily reveal (5s)](command:streamPrivacy.revealAtRange?${revealArgs}) · [Manage Patterns](${openSettingsCmd}) · [Cycle Style](command:streamPrivacy.cycleStyle)`);
         decorations.push({
           range: new vscode.Range(start, end),
           hoverMessage: hover,
@@ -291,7 +290,7 @@ async function handleSensitiveOpen(doc: vscode.TextDocument) {
   if (!enabled) return;
   const uriStr = doc.uri.toString();
   if (suppressedSensitiveUris.has(uriStr)) return;
-  const patterns = vscode.workspace.getConfiguration().get<string[]>('streamerMode.dangerousFiles', []);
+  const patterns = vscode.workspace.getConfiguration().get<string[]>('streamPrivacy.dangerousFiles', []);
   const rel = vscode.workspace.asRelativePath(doc.uri, false);
   const full = doc.uri.fsPath;
   const match = patterns.some((g) => globMatch(g, rel) || globMatch(g, full));
@@ -359,9 +358,9 @@ function globMatch(glob: string, target: string): boolean {
 
 async function applyMaskWindowTitle(context: vscode.ExtensionContext, turnOn: boolean) {
   const cfg = vscode.workspace.getConfiguration('window');
-  const mask = vscode.workspace.getConfiguration().get<boolean>('streamerMode.maskWindowTitle', true);
+  const mask = vscode.workspace.getConfiguration().get<boolean>('streamPrivacy.maskWindowTitle', true);
   if (!mask) return;
-  const maskedValue = vscode.workspace.getConfiguration().get<string>('streamerMode.windowTitleMaskedValue', '${appName}');
+  const maskedValue = vscode.workspace.getConfiguration().get<string>('streamPrivacy.windowTitleMaskedValue', '${appName}');
   if (turnOn) {
     const current = cfg.get<string>('title');
     await context.globalState.update(MEMENTO_PREV_TITLE_KEY, current ?? null);
@@ -498,8 +497,8 @@ function isTemporarilyRevealed(doc: vscode.TextDocument, start: number, end: num
 
 async function showStatusActions(context: vscode.ExtensionContext) {
   const cfg = vscode.workspace.getConfiguration();
-  const style = cfg.get<string>('streamerMode.obfuscationStyle', 'dots');
-  const maskTitle = cfg.get<boolean>('streamerMode.maskWindowTitle', true);
+  const style = cfg.get<string>('streamPrivacy.obfuscationStyle', 'dots');
+  const maskTitle = cfg.get<boolean>('streamPrivacy.maskWindowTitle', true);
   const items: vscode.QuickPickItem[] = [
     { label: enabled ? '$(circle-slash) Disable Streamer Mode' : '$(check) Enable Streamer Mode', description: '' },
     { label: '$(symbol-color) Obfuscation Style: dots', picked: style === 'dots' },
@@ -516,20 +515,20 @@ async function showStatusActions(context: vscode.ExtensionContext) {
     return;
   }
   if (l.includes('dots')) {
-    await cfg.update('streamerMode.obfuscationStyle', 'dots', vscode.ConfigurationTarget.Global);
+    await cfg.update('streamPrivacy.obfuscationStyle', 'dots', vscode.ConfigurationTarget.Global);
   } else if (l.includes('block')) {
-    await cfg.update('streamerMode.obfuscationStyle', 'block', vscode.ConfigurationTarget.Global);
+    await cfg.update('streamPrivacy.obfuscationStyle', 'block', vscode.ConfigurationTarget.Global);
   } else if (l.includes('blur')) {
-    await cfg.update('streamerMode.obfuscationStyle', 'blur', vscode.ConfigurationTarget.Global);
+    await cfg.update('streamPrivacy.obfuscationStyle', 'blur', vscode.ConfigurationTarget.Global);
   } else if (l.includes('Window Title Mask')) {
     const next = !maskTitle;
-    await cfg.update('streamerMode.maskWindowTitle', next, vscode.ConfigurationTarget.Global);
+    await cfg.update('streamPrivacy.maskWindowTitle', next, vscode.ConfigurationTarget.Global);
     if (enabled) {
       // Re-apply window title according to new preference
       await applyMaskWindowTitle(context, enabled).catch(() => void 0);
     }
   } else if (l.includes('Manage Patterns')) {
-    await vscode.commands.executeCommand('workbench.action.openSettings', 'streamerMode.patterns');
+    await vscode.commands.executeCommand('workbench.action.openSettings', 'streamPrivacy.patterns');
     return;
   }
   // Refresh to apply style change
@@ -546,11 +545,11 @@ async function showStatusActions(context: vscode.ExtensionContext) {
 
 async function cycleStyle() {
   const cfg = vscode.workspace.getConfiguration();
-  const cur = cfg.get<string>('streamerMode.obfuscationStyle', 'dots');
+  const cur = cfg.get<string>('streamPrivacy.obfuscationStyle', 'dots');
   const order = ['dots', 'block', 'blur'] as const;
   const idx = order.indexOf(cur as any);
   const next = order[(idx + 1) % order.length];
-  await cfg.update('streamerMode.obfuscationStyle', next, vscode.ConfigurationTarget.Global);
+  await cfg.update('streamPrivacy.obfuscationStyle', next, vscode.ConfigurationTarget.Global);
   if (enabled) {
     if (decorationType) {
       decorationType.dispose();
