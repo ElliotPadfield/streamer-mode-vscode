@@ -7,6 +7,7 @@ let enabled = false;
 let decorationType: vscode.TextEditorDecorationType | null = null;
 let statusItem: vscode.StatusBarItem | null = null;
 let suppressedSensitiveUris = new Set<string>();
+const tempReveals = new Map<string, { start: number; end: number; expires: number }[]>();
 
 const CTX_KEY = 'streamerModeActive';
 const MEMENTO_PREV_TITLE_KEY = 'streamerMode.prevWindowTitle';
@@ -31,6 +32,18 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('streamerMode.cycleStyle', async () => {
       await cycleStyle();
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('streamerMode.revealAtRange', async (uriStr?: string, sLine?: number, sChar?: number, eLine?: number, eChar?: number, ms?: number) => {
+      const uri = uriStr ? vscode.Uri.parse(uriStr) : vscode.window.activeTextEditor?.document.uri;
+      if (!uri) return;
+      const ed = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === uri.toString());
+      if (!ed) return;
+      const start = new vscode.Position(sLine ?? ed.selection.start.line, sChar ?? ed.selection.start.character);
+      const end = new vscode.Position(eLine ?? ed.selection.end.line, eChar ?? ed.selection.end.character);
+      temporarilyReveal(ed.document, start, end, typeof ms === 'number' ? ms : 5000);
     })
   );
 
@@ -137,6 +150,8 @@ function ensureDecorationType() {
   if (style === 'blur') {
     opts = {
       ...base,
+      // Use a tiny transparent background to ensure hover hit-testing
+      backgroundColor: 'rgba(0,0,0,0.001)',
       textDecoration: 'none; filter: blur(6px);',
     };
   } else if (style === 'block') {
@@ -150,6 +165,7 @@ function ensureDecorationType() {
     opts = {
       ...base,
       color: 'rgba(0,0,0,0)',
+      backgroundColor: 'rgba(0,0,0,0.001)',
     };
   }
   decorationType = vscode.window.createTextEditorDecorationType(opts);
@@ -190,6 +206,7 @@ function refreshDecorations() {
   const text = editor.document.getText();
   const decorations: vscode.DecorationOptions[] = [];
   const style = vscode.workspace.getConfiguration().get<string>('streamerMode.obfuscationStyle', 'dots');
+  cleanupExpiredReveals(editor.document);
 
   for (const p of getPatterns()) {
     try {
@@ -198,6 +215,7 @@ function refreshDecorations() {
       while ((m = re.exec(text))) {
         const [maskStart, maskEnd] = maskSpanFromMatch(m, p.group);
         if (maskStart == null || maskEnd == null || maskEnd <= maskStart) continue;
+        if (isTemporarilyRevealed(editor.document, maskStart, maskEnd)) continue;
         const start = editor.document.positionAt(maskStart);
         const end = editor.document.positionAt(maskEnd);
         const maskedLen = Math.max(1, maskEnd - maskStart);
@@ -209,7 +227,8 @@ function refreshDecorations() {
         const hover = new vscode.MarkdownString();
         hover.isTrusted = true;
         const openSettingsCmd = `command:workbench.action.openSettings?${encodeURIComponent(JSON.stringify('streamerMode.patterns'))}`;
-        hover.appendMarkdown(`Streamer Mode: hidden ${p.name}\n\n[Manage Patterns](${openSettingsCmd}) · [Cycle Style](command:streamerMode.cycleStyle)`);
+        const revealArgs = encodeURIComponent(JSON.stringify([editor.document.uri.toString(), start.line, start.character, end.line, end.character, 5000]));
+        hover.appendMarkdown(`Streamer Mode: hidden ${p.name}\n\n[Temporarily reveal (5s)](command:streamerMode.revealAtRange?${revealArgs}) · [Manage Patterns](${openSettingsCmd}) · [Cycle Style](command:streamerMode.cycleStyle)`);
         decorations.push({
           range: new vscode.Range(start, end),
           hoverMessage: hover,
@@ -433,6 +452,50 @@ function replaceGroupWith(text: string, re: RegExp, group: string | number, repl
   return out;
 }
 
+function temporarilyReveal(doc: vscode.TextDocument, startPos: vscode.Position, endPos: vscode.Position, ms: number) {
+  const key = doc.uri.toString();
+  const start = doc.offsetAt(startPos);
+  const end = doc.offsetAt(endPos);
+  const list = tempReveals.get(key) ?? [];
+  const expires = Date.now() + Math.max(500, ms);
+  list.push({ start, end, expires });
+  tempReveals.set(key, list);
+  if (doc === vscode.window.activeTextEditor?.document) {
+    refreshDecorations();
+  }
+  setTimeout(() => {
+    const arr = tempReveals.get(key);
+    if (!arr) return;
+    const now = Date.now();
+    tempReveals.set(key, arr.filter(x => x.expires > now && !(x.start === start && x.end === end)));
+    if (doc === vscode.window.activeTextEditor?.document) {
+      refreshDecorations();
+    }
+  }, Math.max(500, ms));
+}
+
+function cleanupExpiredReveals(doc: vscode.TextDocument) {
+  const key = doc.uri.toString();
+  const arr = tempReveals.get(key);
+  if (!arr) return;
+  const now = Date.now();
+  const next = arr.filter(x => x.expires > now);
+  if (next.length !== arr.length) tempReveals.set(key, next);
+}
+
+function isTemporarilyRevealed(doc: vscode.TextDocument, start: number, end: number): boolean {
+  const key = doc.uri.toString();
+  const arr = tempReveals.get(key);
+  if (!arr || !arr.length) return false;
+  const now = Date.now();
+  for (const r of arr) {
+    if (r.expires <= now) continue;
+    // any overlap hides the decoration
+    if (Math.max(r.start, start) < Math.min(r.end, end)) return true;
+  }
+  return false;
+}
+
 async function showStatusActions(context: vscode.ExtensionContext) {
   const cfg = vscode.workspace.getConfiguration();
   const style = cfg.get<string>('streamerMode.obfuscationStyle', 'dots');
@@ -459,7 +522,12 @@ async function showStatusActions(context: vscode.ExtensionContext) {
   } else if (l.includes('blur')) {
     await cfg.update('streamerMode.obfuscationStyle', 'blur', vscode.ConfigurationTarget.Global);
   } else if (l.includes('Window Title Mask')) {
-    await cfg.update('streamerMode.maskWindowTitle', !maskTitle, vscode.ConfigurationTarget.Global);
+    const next = !maskTitle;
+    await cfg.update('streamerMode.maskWindowTitle', next, vscode.ConfigurationTarget.Global);
+    if (enabled) {
+      // Re-apply window title according to new preference
+      await applyMaskWindowTitle(context, enabled).catch(() => void 0);
+    }
   } else if (l.includes('Manage Patterns')) {
     await vscode.commands.executeCommand('workbench.action.openSettings', 'streamerMode.patterns');
     return;

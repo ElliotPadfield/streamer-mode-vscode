@@ -52,42 +52,13 @@
             "block",
             "blur"
           ],
-          "default": "dots",
+          "default": "blur",
           "description": "How to render masked text in the editor."
         },
         "streamerMode.patterns": {
           "type": "array",
-          "default": [
-            {
-              "name": ".env assignments",
-              "regex": "(?m)^(?:export\\s+)?[A-Z0-9_]{2,}=(?:\\\\?\"[^\"]*\"|[^#\\n]*)"
-            },
-            {
-              "name": "AWS access key",
-              "regex": "AKIA[0-9A-Z]{16}"
-            },
-            {
-              "name": "AWS secret key",
-              "regex": "(?i)aws(.{0,15})?(secret|access)?(.{0,5})?key[^A-Za-z0-9]*[A-Za-z0-9/+=]{40}"
-            },
-            {
-              "name": "Generic bearer/JWT",
-              "regex": "(?i)(bearer\\s+)?eyJ[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}"
-            },
-            {
-              "name": "GitHub token",
-              "regex": "gh[pousr]_[A-Za-z0-9]{36,}"
-            },
-            {
-              "name": "Password in code",
-              "regex": "(?i)(password|pass|pwd)\\s*[:=]\\s*(['\"])[^'\"]+\\1"
-            },
-            {
-              "name": "Email addresses",
-              "regex": "[a-zA-Z0-9_.%+-]+@[a-zA-Z0-9.-]+\\.[A-Za-z]{2,}"
-            }
-          ],
-          "description": "Patterns (regex strings) to mask. Each item is { name, regex }."
+          "default": [],
+          "description": "Custom patterns to mask. Each item supports { name, regex, group? }. Built-in presets controlled by streamerMode.extraPresets."
         },
         "streamerMode.dangerousFiles": {
           "type": "array",
