@@ -1,14 +1,44 @@
 {
   "name": "streamer-mode",
-  "displayName": "Streamer Mode",
-  "description": "Hide secrets and sensitive info while streaming or screen sharing.",
+  "displayName": "Streamer Mode - Hide secrets while on stream",
+  "description": "Blur or hide secrets (.env, API keys, tokens) during streaming, screen sharing, or live demos — masks values only and supports Stripe, AWS, GitHub, Slack, JWTs, URIs, and more.",
   "version": "0.0.1",
-  "publisher": "your-name-or-org",
+  "publisher": "elliotpadfield",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ElliotPadfield/streamer-mode-vscode.git"
+  },
+  "homepage": "https://github.com/ElliotPadfield/streamer-mode-vscode",
+  "bugs": {
+    "url": "https://github.com/ElliotPadfield/streamer-mode-vscode/issues"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "streamer mode",
+    "stream",
+    "screen share",
+    "privacy",
+    "mask",
+    "redact",
+    "blur",
+    "obfuscate",
+    "secrets",
+    "api keys",
+    "tokens",
+    "env",
+    ".env",
+    "security",
+    "live coding",
+    "presentation",
+    "demo",
+    "jwt",
+    "stripe",
+    "aws"
   ],
   "activationEvents": [
     "onStartupFinished"
