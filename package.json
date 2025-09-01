@@ -8,6 +8,11 @@
     "type": "git",
     "url": "https://github.com/ElliotPadfield/streamer-mode-vscode.git"
   },
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#0A0F1A",
+    "theme": "dark"
+  },
   "homepage": "https://github.com/ElliotPadfield/streamer-mode-vscode",
   "bugs": {
     "url": "https://github.com/ElliotPadfield/streamer-mode-vscode/issues"
