@@ -1,11 +1,11 @@
 # Streamer Mode (VS Code)
 
-Blur or hide secrets while streaming, screen sharing, or live demoing. Value‑only masking for .env, YAML/TOML/JSON; built‑in detectors for API keys and tokens (Stripe, AWS, GitHub, Slack, JWTs, URIs, and more). Hover to temporarily reveal.
+Blur or hide secrets while streaming, screen sharing, or live demoing. Value‑only masking for .env, YAML/TOML/JSON; built‑in detectors for API keys, tokens, and URIs. Hover to temporarily reveal.
 
 ## Features
 
 - Value‑only masking: Keeps keys visible; hides only values in `.env`, YAML/TOML, JSON, properties, URIs (passwords).
-- Built‑in presets: Stripe (`sk_`/`whsec_`), AWS, GitHub, JWTs, Slack, Google API keys, Twilio, SendGrid, Mailgun, Datadog, New Relic, and more.
+- Built‑in presets: Common provider tokens and API keys (secret keys, webhooks, JWTs, and URI passwords).
 - Temporary reveal: Hover masked text and click “Temporarily reveal (5s)”.
 - Redacted copy: Overrides Copy to place a redacted version on the clipboard when enabled.
 - Sensitive file guard: Warns when opening `.env`, keys, or other configured patterns.
