@@ -1,0 +1,143 @@
+{
+  "name": "streamer-mode",
+  "displayName": "Streamer Mode",
+  "description": "Hide secrets and sensitive info while streaming or screen sharing.",
+  "version": "0.0.1",
+  "publisher": "your-name-or-org",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "streamerMode.toggle",
+        "title": "Streamer Mode: Toggle"
+      },
+      {
+        "command": "streamerMode.statusActions",
+        "title": "Streamer Mode: Status Actions"
+      },
+      {
+        "command": "streamerMode.cycleStyle",
+        "title": "Streamer Mode: Cycle Obfuscation Style"
+      },
+      {
+        "command": "streamerMode.copyRedacted",
+        "title": "Streamer Mode: Copy Redacted"
+      },
+      {
+        "command": "streamerMode.openSensitiveFileAnyway",
+        "title": "Streamer Mode: Open Sensitive File Anyway"
+      }
+    ],
+    "configuration": {
+      "title": "Streamer Mode",
+      "properties": {
+        "streamerMode.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Streamer Mode masking and protections."
+        },
+        "streamerMode.obfuscationStyle": {
+          "type": "string",
+          "enum": [
+            "dots",
+            "block",
+            "blur"
+          ],
+          "default": "dots",
+          "description": "How to render masked text in the editor."
+        },
+        "streamerMode.patterns": {
+          "type": "array",
+          "default": [
+            {
+              "name": ".env assignments",
+              "regex": "(?m)^(?:export\\s+)?[A-Z0-9_]{2,}=(?:\\\\?\"[^\"]*\"|[^#\\n]*)"
+            },
+            {
+              "name": "AWS access key",
+              "regex": "AKIA[0-9A-Z]{16}"
+            },
+            {
+              "name": "AWS secret key",
+              "regex": "(?i)aws(.{0,15})?(secret|access)?(.{0,5})?key[^A-Za-z0-9]*[A-Za-z0-9/+=]{40}"
+            },
+            {
+              "name": "Generic bearer/JWT",
+              "regex": "(?i)(bearer\\s+)?eyJ[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}\\.[a-zA-Z0-9_-]{10,}"
+            },
+            {
+              "name": "GitHub token",
+              "regex": "gh[pousr]_[A-Za-z0-9]{36,}"
+            },
+            {
+              "name": "Password in code",
+              "regex": "(?i)(password|pass|pwd)\\s*[:=]\\s*(['\"])[^'\"]+\\1"
+            },
+            {
+              "name": "Email addresses",
+              "regex": "[a-zA-Z0-9_.%+-]+@[a-zA-Z0-9.-]+\\.[A-Za-z]{2,}"
+            }
+          ],
+          "description": "Patterns (regex strings) to mask. Each item is { name, regex }."
+        },
+        "streamerMode.dangerousFiles": {
+          "type": "array",
+          "default": [
+            "**/.env*",
+            "**/secrets.*",
+            "**/*.pem",
+            "**/*.key",
+            "**/config/*.yml"
+          ],
+          "description": "Glob patterns of files to guard while enabled."
+        },
+        "streamerMode.maskWindowTitle": {
+          "type": "boolean",
+          "default": true,
+          "description": "When enabled, simplify the window title to hide workspace names."
+        },
+        "streamerMode.extraPresets": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable extra built-in secret detection presets (env/config values, provider tokens, URIs)."
+        },
+        "streamerMode.windowTitleMaskedValue": {
+          "type": "string",
+          "default": "${appName}",
+          "description": "Title format used when masked (uses the same variables as VS Code window.title)."
+        }
+      }
+    },
+    "keybindings": [
+      {
+        "command": "streamerMode.copyRedacted",
+        "key": "cmd+c",
+        "when": "streamerModeActive && editorTextFocus && isMac"
+      },
+      {
+        "command": "streamerMode.copyRedacted",
+        "key": "ctrl+c",
+        "when": "streamerModeActive && editorTextFocus && !isMac"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}
